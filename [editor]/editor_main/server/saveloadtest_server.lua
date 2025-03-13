@@ -117,6 +117,11 @@ addEventHandler("newResource", root,
 		triggerEvent("onNewMap", resourceRoot)
 		dumpSave()
 		editor_gui.outputMessage(getPlayerName(client).." started a new map.", root, 255, 0, 0)
+
+		actionList = {}
+		currentActionIndex = 0
+
+		lastTestGamemodeName = nil
 	end
 )
 
@@ -147,6 +152,11 @@ function handleOpenResource()
 		for i, obj in pairs(getElementsByType("object")) do
 			setElementCollisionsEnabled(obj, true)
 		end
+
+		actionList = {}
+		currentActionIndex = 0
+
+		lastTestGamemodeName = nil
 
 		triggerEvent("onMapOpened", mapContainer, openingResource)
 		flattenTreeRuns = 0
@@ -309,6 +319,7 @@ end
 local specialSyncers = {
 	position = function() end,
 	rotation = function() end,
+	scale = function(element) return edf.edfGetElementScale(element) end,
 	dimension = function(element) return getElementData(element, "me:dimension") or 0 end,
 	interior = function(element) return edf.edfGetElementInterior(element) end,
 	alpha = function(element) return edf.edfGetElementAlpha(element) end,
@@ -747,7 +758,11 @@ function beginTest(client,gamemodeName)
 	resetMapInfo()
 	setupMapSettings()
 	disablePickups(false)
-	gamemodeName = gamemodeName or lastTestGamemodeName
+
+	if gamemodeName == nil then
+		gamemodeName = lastTestGamemodeName
+	end
+
 	if ( gamemodeName ) then
 		lastTestGamemodeName = gamemodeName
 		set ( "*freeroam.spawnmapondeath", "false" )
@@ -779,6 +794,9 @@ function beginTest(client,gamemodeName)
 		end
 		g_in_test = "gamemode"
 	else
+		if gamemodeName == false then
+			lastTestGamemodeName = gamemodeName
+		end
 		if getResourceState(freeroamRes) ~= "running" and not startResource ( freeroamRes, true ) then
 			restoreSettings()
 			triggerClientEvent ( root, "saveloadtest_return", client, "test", false, false,
